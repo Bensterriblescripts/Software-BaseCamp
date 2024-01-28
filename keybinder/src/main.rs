@@ -2,7 +2,13 @@ use powershell_script;
 use std::process::Command;
 use winapi::um::winuser::GetAsyncKeyState;
 
+use winit::event_loop::EventLoop;
+
 fn main() {
+
+    // Winit
+    let event_loop = EventLoop::new
+
 
     // Applications
     let edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
