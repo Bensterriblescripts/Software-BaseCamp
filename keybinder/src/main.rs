@@ -1,13 +1,20 @@
-use powershell_script;
+use std::env;
+use std::fs;
 use std::process::Command;
+
+use powershell_script;
+use serde::Deserialize;
 use winapi::um::winuser::GetAsyncKeyState;
 
-use winit::event_loop::EventLoop;
+// use winit::event_loop::EventLoop;
 
 fn main() {
 
     // Winit
-    let event_loop = EventLoop::new
+    // let event_loop = EventLoop::new
+
+    let edge_profile_paths = get_edgeprofiles();
+    let edge_profile_metadata = get_edgeprofile_data(edge_profile_paths);
 
 
     // Applications
@@ -40,27 +47,31 @@ fn main() {
         if alt != 0 && q != 0 {
             run_application(edge, edge_profile_personal);
             println!("Running: Edge-Personal");
+            std::thread::sleep(std::time::Duration::from_millis(150));
         }
         else if alt != 0 && w != 0 {
             run_application(edge, edge_profile_work);
             println!("Running: Edge-Work");
+            std::thread::sleep(std::time::Duration::from_millis(150));
         }
         else if alt != 0 && a != 0 {
             open_folder(local_repo);
             println!("Opened: Local Folder");
+            std::thread::sleep(std::time::Duration::from_millis(150));
         }
         else if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 {
             println!("Running: Windows Configuration Script");
-            run_powershell(script_cleanup)
+            run_powershell(script_cleanup);
+            std::thread::sleep(std::time::Duration::from_millis(150));
         }
         
         // Lets not overload the CPU
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(50));
     }
 
 }
 
-
+// Executing/Launching
 fn run_application<'a>(app: &'a str, arg: &str) -> &'a str<> {
     let _output = Command::new(app)
     .arg(arg)
@@ -84,4 +95,48 @@ fn open_folder(folder: &str) -> &str {
         .output();
 
     return folder;
+}
+
+// Edge
+fn get_edgeprofiles() -> Vec<String> {
+
+    let local_appdata = env::var("LocalAppData").unwrap();
+    let edge_path = format!("{}\\Microsoft\\Edge\\User Data", local_appdata);
+    let mut profiles: Vec<String> = Vec::new();
+    let mut profile_paths: Vec<String> = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(edge_path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if entry.path().is_dir() {
+                    if let Some(folder_name) = entry.file_name().to_str() {
+                        let folder_name_string = folder_name.to_string();
+                        if folder_name_string.contains("Profile") {
+                            profiles.push(folder_name_string);
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+    else {
+        println!("Error reading directory.");
+    }
+    for profile in profiles {
+        println!("Found new profile: {}", profile);
+        let profile_path = format!("{}\\Microsoft\\Edge\\User Data\\{}", local_appdata, profile);
+        profile_paths.push(profile_path);
+    }
+    return profile_paths;
+}
+fn get_edgeprofile_data(profile_paths: Vec<String>) -> Vec<String> {
+
+    let profile_data: Vec<String> = Vec::new();
+
+    for profile in profile_paths {
+        
+    }
+
+    return profile_data;
 }
