@@ -10,6 +10,7 @@ use winapi::um::winuser::GetAsyncKeyState;
 
 fn main() {
 
+<<<<<<< Updated upstream
     // Winit
     // let event_loop = EventLoop::new
 
@@ -17,6 +18,8 @@ fn main() {
     let edge_profile_metadata = get_edgeprofile_data(edge_profile_paths);
 
 
+=======
+>>>>>>> Stashed changes
     // Applications
     let edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
     // Folders
@@ -32,7 +35,6 @@ fn main() {
 
     // Core Keylogger
     loop {
-
         let enter = unsafe { GetAsyncKeyState(0x0D) };
         let alt = unsafe { GetAsyncKeyState(0x12) };
         let q = unsafe { GetAsyncKeyState(0x51) };

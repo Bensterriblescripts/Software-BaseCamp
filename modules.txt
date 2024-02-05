@@ -1,0 +1,4 @@
+pwsh registry or setting editor
+process list for most recent or most used
+keybinder
+pc fixes - reset network etc
