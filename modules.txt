@@ -2,3 +2,8 @@ pwsh registry or setting editor
 process list for most recent or most used
 keybinder
 pc fixes - reset network etc
+
+core features missing:
+gui
+variable storage (local file savedata/db dump)
+

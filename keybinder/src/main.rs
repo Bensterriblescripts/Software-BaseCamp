@@ -31,10 +31,12 @@ fn main() {
     let _edge_work = ["alt", "q"];
 
     // Microsoft Account Tenant Login
-    let edge_work_login_microsoft = env::var("TenantLoginPage").unwrap();
-    println!("Found Microsoft Login URL: {}", edge_work_login_microsoft);
+    let edge_work_login = "";
+    let edge_work_login = env::var("TenantLoginPage").unwrap().as_str();
+    let edge_personal_login = "";
+    println!("Found Microsoft Login URL: {}", edge_work_login);
     // Auto-Open Work Browser Links
-    let edge_work_sharepoint = "https://sparknz.sharepoint.com/";
+    let _edge_work_sharepoint = "https://sparknz.sharepoint.com/";
     let edge_work_outlook = "https://outlook.office.com/mail/";
     let edge_work_citrix = env::var("Citrix").unwrap();
     println!("Found Citrix URL: {}", edge_work_citrix);
@@ -53,12 +55,12 @@ fn main() {
         let m = unsafe { GetAsyncKeyState(0x4D) };
 
         if alt != 0 && q != 0 {
-            run_application(edge, edge_profile_personal);
+            run_application(edge, edge_profile_personal, edge_work_login);
             println!("Running: Edge-Personal");
             std::thread::sleep(std::time::Duration::from_millis(150));
         }
         else if alt != 0 && w != 0 {
-            run_application(edge, edge_profile_work);
+            run_application(edge, edge_profile_work, edge_personal_login);
             println!("Running: Edge-Work");
             std::thread::sleep(std::time::Duration::from_millis(150));
         }
@@ -80,7 +82,14 @@ fn main() {
 }
 
 // Executing/Launching
-fn run_application<'a>(app: &'a str, arg: &str) -> &'a str<> {
+fn run_application<'a>(app: &'a str, arg: &str, login_url: &str) -> &'a str<> {
+
+    let loginpage = login_url;
+
+    if !loginpage.is_empty() {
+
+    }
+
     let _output = Command::new(app)
     .arg(arg)
     .output();
@@ -107,7 +116,6 @@ fn open_folder(folder: &str) -> &str {
 
 // Edge
 fn get_edgeprofiles() -> Vec<String> {
-
     let local_appdata = env::var("LocalAppData").unwrap();
     let edge_path = format!("{}\\Microsoft\\Edge\\User Data", local_appdata);
     let mut profiles: Vec<String> = Vec::new();
@@ -143,7 +151,7 @@ fn get_edgeprofile_data(profile_paths: Vec<String>) -> Vec<String> {
     let profile_data: Vec<String> = Vec::new();
 
     for profile in profile_paths {
-        
+        println!("{:?}", profile);
     }
 
     return profile_data;
