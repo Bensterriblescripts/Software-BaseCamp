@@ -30,6 +30,15 @@ fn main() {
     let _edge_personal = ["alt", "q"];
     let _edge_work = ["alt", "q"];
 
+    // Microsoft Account Tenant Login
+    let edge_work_login_microsoft = env::var("TenantLoginPage").unwrap();
+    println!("Found Microsoft Login URL: {}", edge_work_login_microsoft);
+    // Auto-Open Work Browser Links
+    let edge_work_sharepoint = "https://sparknz.sharepoint.com/";
+    let edge_work_outlook = "https://outlook.office.com/mail/";
+    let edge_work_citrix = env::var("Citrix").unwrap();
+    println!("Found Citrix URL: {}", edge_work_citrix);
+
     // Core Keylogger
     loop {
         let enter = unsafe { GetAsyncKeyState(0x0D) };
