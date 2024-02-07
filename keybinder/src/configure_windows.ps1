@@ -1,3 +1,5 @@
+## Must be run from an adminstrator shell (Should run through the rust application as admin by default)
+
 # Remove Task View
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name ShowTaskViewButton -Value 0 -Type DWord -Force
 # Remove Widgets
