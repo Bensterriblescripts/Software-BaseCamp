@@ -42,6 +42,7 @@ fn main() {
 
     // Core Keylogger
     loop {
+
         let enter = unsafe { GetAsyncKeyState(0x0D) };
         let alt = unsafe { GetAsyncKeyState(0x12) };
         let left_ctrl = unsafe { GetAsyncKeyState(0x11) };
@@ -56,6 +57,20 @@ fn main() {
         let _r = unsafe { GetAsyncKeyState(0x52) };
         let s = unsafe { GetAsyncKeyState(0x53) };
         let w = unsafe { GetAsyncKeyState(0x57) };
+
+        // Start/End Keybinds
+        if alt != 0 && left_ctrl != 0 && f != 0 {
+            if keys_active {
+                keys_active = false;
+                println!("Keybinds Disabled");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+            else {
+                keys_active = true;
+                println!("Keybinds Enabled");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+        }
 
         // Keybinds
         if keys_active {
@@ -117,20 +132,6 @@ fn main() {
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
         }
-        
-        // Start/End Keybinds
-        if alt != 0 && left_ctrl != 0 && f != 0 {
-            if keys_active {
-                keys_active = false;
-                println!("Keybinds Disabled");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-            else {
-                keys_active = true;
-                println!("Keybinds Enabled");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-        }
 
         // Lets not overload the CPU
         std::thread::sleep(std::time::Duration::from_millis(50));
@@ -138,7 +139,7 @@ fn main() {
 
 }
 
-// Executing/Launching
+// Launch Program
 fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
 
     // Run with extra argument
@@ -167,6 +168,7 @@ fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
 
     return app;
 }
+// Scripts
 fn run_powershell(script: &str) {
     match powershell_script::run(script) {
         Ok(output) => {
