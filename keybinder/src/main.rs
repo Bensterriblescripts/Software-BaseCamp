@@ -143,20 +143,26 @@ fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
 
     // Run with extra argument
     if !arg2.is_empty() {
-        let _output = Command::new(app)
+        let output = Command::new(app)
         .arg(arg)
         .arg(arg2)
-        .output();
+        .spawn();
+
+        println!("Process ID: {}", output.unwrap().id())
     }
     // Run the application
     else if !arg.is_empty() {
-        let _output = Command::new(app)
+        let output = Command::new(app)
         .arg(arg)
-        .output();
+        .spawn();
+
+        println!("Process ID: {}", output.unwrap().id())
     }
     else {
-        let _output = Command::new(app)
-        .output();
+        let output = Command::new(app)
+        .spawn();
+
+        println!("Process ID: {}", output.unwrap().id())
     }
 
     return app;
