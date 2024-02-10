@@ -1,5 +1,4 @@
 use std::process::Command;
-
 use powershell_script;
 
 // Applications

@@ -1,7 +1,8 @@
+mod conf;
 mod execute;
+mod vars;
 
 use std::env;
-use std::fs;
 
 use winapi::um::winuser::GetAsyncKeyState;
 
@@ -9,22 +10,12 @@ use winapi::um::winuser::GetAsyncKeyState;
 
 fn main() {
 
-    let edge_profile_paths = get_edgeprofiles();
-    let _edge_profile_metadata = get_edgeprofile_data(edge_profile_paths);
-
     // Core Variables
     let mut keys_active = true;
 
-    // Applications
-    let edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-    let steam = "C:\\Program Files (x86)\\Steam\\steam.exe";
-    let discord = "C:\\Users\\coffe\\AppData\\Local\\Discord\\app-1.0.9032\\Discord.exe";
-
-    // Folders
-    let local_repo = "C:\\Local";
-
-    // Script
-    let script_cleanup = include_str!("scripts/configure_windows.ps1");
+    // Setup edge profiles
+    let edge_profile_paths = conf::get_edgeprofiles();
+    let _edge_profile_metadata = conf::get_edgeprofile_data(edge_profile_paths);
 
     // Arguments
     let edge_profile_personal = "--profile-directory=Default";
@@ -77,7 +68,7 @@ fn main() {
 
             // Edge - Personal
             if alt != 0 && q != 0 && !edge_personal_open {
-                execute::run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                execute::run_application(vars::EDGE, edge_profile_personal, &edge_personal_arg2);
                 edge_personal_open = true;
                 println!("Running: Edge-Personal");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -87,7 +78,7 @@ fn main() {
             }
             else if alt != 0 && e != 0 {
                 let edge_personal_arg2 = "--inprivate";
-                execute::run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                execute::run_application(vars::EDGE, edge_profile_personal, &edge_personal_arg2);
                 edge_personal_open = true;
                 println!("Running: Edge-Personal-Private");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -95,7 +86,7 @@ fn main() {
 
             // Edge - Work
             if alt != 0 && w != 0 && !edge_work_open {
-                execute::run_application(edge, edge_profile_work, &edge_work_arg2);
+                execute::run_application(vars::EDGE, edge_profile_work, &edge_work_arg2);
                 edge_work_open = true;
                 println!("Running: Edge-Work");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -106,29 +97,29 @@ fn main() {
 
             // Steam
             if alt != 0 && s != 0 {
-                execute::run_application(steam, "", "");
+                execute::run_application(vars::STEAM, "", "");
                 println!("Opened: Steam");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Discord
             if alt != 0 && d != 0 {
-                execute::run_application(discord, "", "");
+                execute::run_application(vars::DISCORD, "", "");
                 println!("Opened: Discord");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Folder
             if alt != 0 && a != 0 {
-                execute::open_folder(local_repo);
+                execute::open_folder(vars::FOLDER_LOCAL);
                 println!("Opened: Local Folder");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Scripts
-            if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 {
+            if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 { // Full configuration script
                 println!("Running: Windows Configuration Script");
-                execute::run_powershell(script_cleanup);
+                execute::run_powershell(vars::FULL_CONFIGURATION);
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
         }
@@ -137,47 +128,4 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
 
-}
-
-// Edge
-fn get_edgeprofiles() -> Vec<String> {
-    let local_appdata = env::var("LocalAppData").unwrap();
-    let edge_path = format!("{}\\Microsoft\\Edge\\User Data", local_appdata);
-    let mut profiles: Vec<String> = Vec::new();
-    let mut profile_paths: Vec<String> = Vec::new();
-
-    if let Ok(entries) = fs::read_dir(edge_path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if entry.path().is_dir() {
-                    if let Some(folder_name) = entry.file_name().to_str() {
-                        let folder_name_string = folder_name.to_string();
-                        if folder_name_string.contains("Profile") {
-                            profiles.push(folder_name_string);
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-    else {
-        println!("Error reading directory.");
-    }
-    for profile in profiles {
-        println!("Found new profile: {}", profile);
-        let profile_path = format!("{}\\Microsoft\\Edge\\User Data\\{}", local_appdata, profile);
-        profile_paths.push(profile_path);
-    }
-    return profile_paths;
-}
-fn get_edgeprofile_data(profile_paths: Vec<String>) -> Vec<String> {
-
-    let profile_data: Vec<String> = Vec::new();
-
-    for profile in profile_paths {
-        println!("{:?}", profile);
-    }
-
-    return profile_data;
 }
