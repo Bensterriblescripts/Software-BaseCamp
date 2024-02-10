@@ -9,9 +9,6 @@ use winapi::um::winuser::GetAsyncKeyState;
 
 fn main() {
 
-    // Winit
-    // let event_loop = EventLoop::new
-
     let edge_profile_paths = get_edgeprofiles();
     let _edge_profile_metadata = get_edgeprofile_data(edge_profile_paths);
 
@@ -20,10 +17,15 @@ fn main() {
 
     // Applications
     let edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+    let steam = "C:\\Program Files (x86)\\Steam\\steam.exe";
+    let discord = "C:\\Users\\coffe\\AppData\\Local\\Discord\\app-1.0.9032\\Discord.exe";
+
     // Folders
     let local_repo = "C:\\Local";
+
     // Script
     let script_cleanup = include_str!("configure_windows.ps1");
+
     // Arguments
     let edge_profile_personal = "--profile-directory=Default";
     let edge_personal_arg2 = "";
@@ -32,9 +34,7 @@ fn main() {
     let edge_profile_work = "--profile-directory=Profile 4";
     let edge_work_arg2 = env::var("TenantLoginPage").unwrap().as_str().to_owned();
     let mut edge_work_open = false;
-    // Keybinds
-    let _edge_personal = ["alt", "q"];
-    let _edge_work = ["alt", "q"];
+
     // Auto-Open Work Browser Links
     let _edge_work_sharepoint = "https://sparknz.sharepoint.com/";
     let _edge_work_outlook = "https://outlook.office.com/mail/";
@@ -47,12 +47,14 @@ fn main() {
         let left_ctrl = unsafe { GetAsyncKeyState(0x11) };
         let a = unsafe { GetAsyncKeyState(0x41) };
         let c = unsafe { GetAsyncKeyState(0x43) };
+        let d = unsafe { GetAsyncKeyState(0x44) };
         let e = unsafe { GetAsyncKeyState(0x45) };
         let f = unsafe { GetAsyncKeyState(0x46) };
         let m = unsafe { GetAsyncKeyState(0x4D) };
         let n = unsafe { GetAsyncKeyState(0x4E) };
         let q = unsafe { GetAsyncKeyState(0x51) };
         let _r = unsafe { GetAsyncKeyState(0x52) };
+        let s = unsafe { GetAsyncKeyState(0x53) };
         let w = unsafe { GetAsyncKeyState(0x57) };
 
         // Keybinds
@@ -85,6 +87,20 @@ fn main() {
             }
             else if alt != 0 && w != 0 && edge_work_open {
                 println!("Work profile is already open.")
+            }
+
+            // Steam
+            if alt != 0 && s != 0 {
+                run_application(steam, "", "");
+                println!("Opened: Steam");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+
+            // Discord
+            if alt != 0 && d != 0 {
+                run_application(discord, "", "");
+                println!("Opened: Discord");
+                std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Folder
@@ -133,9 +149,13 @@ fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
         .output();
     }
     // Run the application
-    else {
+    else if !arg.is_empty() {
         let _output = Command::new(app)
         .arg(arg)
+        .output();
+    }
+    else {
+        let _output = Command::new(app)
         .output();
     }
 
