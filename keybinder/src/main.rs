@@ -15,6 +15,9 @@ fn main() {
     let edge_profile_paths = get_edgeprofiles();
     let _edge_profile_metadata = get_edgeprofile_data(edge_profile_paths);
 
+    // Core Variables
+    let mut keys_active = true;
+
     // Applications
     let edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
     // Folders
@@ -23,73 +26,96 @@ fn main() {
     let script_cleanup = include_str!("configure_windows.ps1");
     // Arguments
     let edge_profile_personal = "--profile-directory=Default";
+    let edge_personal_arg2 = "";
     let mut edge_personal_open = false;
+
     let edge_profile_work = "--profile-directory=Profile 4";
+    let edge_work_arg2 = env::var("TenantLoginPage").unwrap().as_str().to_owned();
     let mut edge_work_open = false;
     // Keybinds
     let _edge_personal = ["alt", "q"];
     let _edge_work = ["alt", "q"];
-
-    // Microsoft Account Tenant Login
-    let _edge_work_login = "";
-    let edge_work_login = env::var("TenantLoginPage").unwrap().as_str().to_owned();
-    let edge_personal_login = "";
-    println!("Found Microsoft Login URL: {}", edge_work_login);
     // Auto-Open Work Browser Links
     let _edge_work_sharepoint = "https://sparknz.sharepoint.com/";
     let _edge_work_outlook = "https://outlook.office.com/mail/";
-    let edge_work_citrix = env::var("Citrix").unwrap();
-    println!("Found Citrix URL: {}", edge_work_citrix);
+    let _edge_work_citrix = env::var("Citrix").unwrap();
 
     // Core Keylogger
     loop {
         let enter = unsafe { GetAsyncKeyState(0x0D) };
         let alt = unsafe { GetAsyncKeyState(0x12) };
-        let q = unsafe { GetAsyncKeyState(0x51) };
-        let w = unsafe { GetAsyncKeyState(0x57) };
-        let _e = unsafe { GetAsyncKeyState(0x45) };
-        let _r = unsafe { GetAsyncKeyState(0x52) };
+        let left_ctrl = unsafe { GetAsyncKeyState(0x11) };
         let a = unsafe { GetAsyncKeyState(0x41) };
         let c = unsafe { GetAsyncKeyState(0x43) };
-        let n = unsafe { GetAsyncKeyState(0x4E) };
+        let e = unsafe { GetAsyncKeyState(0x45) };
+        let f = unsafe { GetAsyncKeyState(0x46) };
         let m = unsafe { GetAsyncKeyState(0x4D) };
+        let n = unsafe { GetAsyncKeyState(0x4E) };
+        let q = unsafe { GetAsyncKeyState(0x51) };
+        let _r = unsafe { GetAsyncKeyState(0x52) };
+        let w = unsafe { GetAsyncKeyState(0x57) };
 
-        // Edge - Work
-        if alt != 0 && q != 0 && !edge_work_open {
-            run_application(edge, edge_profile_personal, &edge_work_login);
-            edge_work_open = true;
-            println!("Running: Edge-Personal");
-            std::thread::sleep(std::time::Duration::from_millis(150));
-        }
-        else if alt != 0 && q != 0 && edge_work_open {
-            println!("Work profile is already open.");
-        }
+        // Keybinds
+        if keys_active {
 
-        // Edge - Personal
-        if alt != 0 && w != 0 && !edge_personal_open {
-            run_application(edge, edge_profile_work, edge_personal_login);
-            edge_personal_open = true;
-            println!("Running: Edge-Work");
-            std::thread::sleep(std::time::Duration::from_millis(150));
-        }
-        else if alt != 0 && w != 0 && edge_personal_open {
-            println!("Personal profile is already open.")
-        }
+            // Edge - Personal
+            if alt != 0 && q != 0 && !edge_personal_open {
+                run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                edge_personal_open = true;
+                println!("Running: Edge-Personal");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+            else if alt != 0 && q != 0 && edge_personal_open {
+                println!("Personal profile is already open.");
+            }
+            else if alt != 0 && e != 0 {
+                let edge_personal_arg2 = "--inprivate";
+                run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                edge_personal_open = true;
+                println!("Running: Edge-Personal-Private");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
 
-        // Folder
-        if alt != 0 && a != 0 {
-            open_folder(local_repo);
-            println!("Opened: Local Folder");
-            std::thread::sleep(std::time::Duration::from_millis(150));
-        }
+            // Edge - Work
+            if alt != 0 && w != 0 && !edge_work_open {
+                run_application(edge, edge_profile_work, &edge_work_arg2);
+                edge_work_open = true;
+                println!("Running: Edge-Work");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+            else if alt != 0 && w != 0 && edge_work_open {
+                println!("Work profile is already open.")
+            }
 
-        // Scripts
-        if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 {
-            println!("Running: Windows Configuration Script");
-            run_powershell(script_cleanup);
-            std::thread::sleep(std::time::Duration::from_millis(150));
+            // Folder
+            if alt != 0 && a != 0 {
+                open_folder(local_repo);
+                println!("Opened: Local Folder");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+
+            // Scripts
+            if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 {
+                println!("Running: Windows Configuration Script");
+                run_powershell(script_cleanup);
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
         }
         
+        // Start/End Keybinds
+        if alt != 0 && left_ctrl != 0 && f != 0 {
+            if keys_active {
+                keys_active = false;
+                println!("Keybinds Disabled");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+            else {
+                keys_active = true;
+                println!("Keybinds Enabled");
+                std::thread::sleep(std::time::Duration::from_millis(150));
+            }
+        }
+
         // Lets not overload the CPU
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
@@ -97,17 +123,21 @@ fn main() {
 }
 
 // Executing/Launching
-fn run_application<'a>(app: &'a str, arg: &str, login_url: &str) -> &'a str<> {
+fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
 
-    let loginpage = login_url;
-
-    if !loginpage.is_empty() {
-
+    // Run with extra argument
+    if !arg2.is_empty() {
+        let _output = Command::new(app)
+        .arg(arg)
+        .arg(arg2)
+        .output();
     }
-
-    let _output = Command::new(app)
-    .arg(arg)
-    .output();
+    // Run the application
+    else {
+        let _output = Command::new(app)
+        .arg(arg)
+        .output();
+    }
 
     return app;
 }
