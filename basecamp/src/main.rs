@@ -3,26 +3,38 @@ mod execute;
 mod vars;
 
 use std::env;
+use std::collections::HashMap;
 
 use winapi::um::winuser::GetAsyncKeyState;
 
 fn main() {
 
+    // Binds
+    let mut keybinds: HashMap<(&str, &str, &str), (&str, &str, &str, &str)> = HashMap::new();
+    let collected_keybinds = vec![
+        (("alt",    "q",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, "", "Application")),
+        (("alt",    "w",    ""),    (vars::EDGE, vars::ARG_EDGE_WORK, "", "Application")),
+        (("alt",    "e",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, vars::ARG_EDGE_PRIVATE, "Application")),
+        (("alt",    "s",    ""),    (vars::STEAM, "", "", "Application")),
+        (("alt",    "d",    ""),    (vars::DISCORD, "", "", "Application")),
+        (("alt",    "a",    ""),    (vars::FOLDER_LOCAL, "", "", "Folder")),
+        (("lctrl",  "alt",  "f"),   ("Keybinds", "Toggle", "", "Setting")),
+    ];
+    keybinds.extend(collected_keybinds);
+
     // Core Variables
-    let mut keys_active = true;
+    let mut launch = false;
+
+    // Settings
+    let mut settings: HashMap<&str, i32> = HashMap::new();
+    let collected_settings = vec![
+        ("Keybinds", 1),
+    ];
+    settings.extend(collected_settings);
 
     // Setup edge profiles
     let edge_profile_paths = conf::get_edgeprofiles();
     let _edge_profile_metadata = conf::get_edgeprofile_data(edge_profile_paths);
-
-    // Arguments
-    let edge_profile_personal = "--profile-directory=Default";
-    let edge_personal_arg2 = "";
-    let mut edge_personal_open = false;
-
-    let edge_profile_work = "--profile-directory=Profile 4";
-    let edge_work_arg2 = env::var("TenantLoginPage").unwrap().as_str().to_owned();
-    let mut edge_work_open = false;
 
     // Auto-Open Work Browser Links
     let _edge_work_sharepoint = "https://sparknz.sharepoint.com/";
@@ -32,94 +44,149 @@ fn main() {
     // Core Keylogger
     loop {
 
-        let enter = unsafe { GetAsyncKeyState(0x0D) };
-        let alt = unsafe { GetAsyncKeyState(0x12) };
-        let left_ctrl = unsafe { GetAsyncKeyState(0x11) };
-        let a = unsafe { GetAsyncKeyState(0x41) };
-        let c = unsafe { GetAsyncKeyState(0x43) };
-        let d = unsafe { GetAsyncKeyState(0x44) };
-        let e = unsafe { GetAsyncKeyState(0x45) };
-        let f = unsafe { GetAsyncKeyState(0x46) };
-        let m = unsafe { GetAsyncKeyState(0x4D) };
-        let n = unsafe { GetAsyncKeyState(0x4E) };
-        let q = unsafe { GetAsyncKeyState(0x51) };
-        let _r = unsafe { GetAsyncKeyState(0x52) };
-        let s = unsafe { GetAsyncKeyState(0x53) };
-        let w = unsafe { GetAsyncKeyState(0x57) };
+        // Get all key states on loop
+        let mut keystates: HashMap<&str, i16> = HashMap::new();
+        let keystates_collected = vec![
+            ("alt",         unsafe { GetAsyncKeyState(0x12) } ),
+            ("enter",       unsafe { GetAsyncKeyState(0x0D) }),
+            ("lctrl",       unsafe { GetAsyncKeyState(0x11) }),
+            ("a",           unsafe { GetAsyncKeyState(0x41) }),
+            ("c",           unsafe { GetAsyncKeyState(0x43) }),
+            ("d",           unsafe { GetAsyncKeyState(0x44) }),
+            ("e",           unsafe { GetAsyncKeyState(0x45) }),
+            ("f",           unsafe { GetAsyncKeyState(0x46) }),
+            ("m",           unsafe { GetAsyncKeyState(0x4D) }),
+            ("n",           unsafe { GetAsyncKeyState(0x4E) }),
+            ("q",           unsafe { GetAsyncKeyState(0x51) }),
+            ("r",           unsafe { GetAsyncKeyState(0x52) }),
+            ("s",           unsafe { GetAsyncKeyState(0x53) }),
+            ("w",           unsafe { GetAsyncKeyState(0x57) }),
+        ];
+        keystates.extend(keystates_collected);
 
-        // Start/End Keybinds
-        if alt != 0 && left_ctrl != 0 && f != 0 {
-            if keys_active {
-                keys_active = false;
-                println!("Keybinds Disabled");
-                std::thread::sleep(std::time::Duration::from_millis(150));
+        // Setting - Check if keybinds are enabled
+        if let Some(keybind_setting) = settings.get("Keybinds") {
+            if keybind_setting == &1 {
+                // Actions by key
+                for (keypress, value) in keystates.iter() {
+                    // If the key has been pressed
+                    if *value != 0 {
+                        // Locate the key in our keybinds hashmap
+                        for ((first_key, second_key, third_key), (target, arg1, arg2, launchtype)) in &keybinds {
+
+                            // Single key binds
+                            if first_key == keypress && second_key.is_empty() && third_key.is_empty() {
+                                launch = true;
+                            }
+
+                            // Two key binds
+                            else if first_key == keypress && !second_key.is_empty() && third_key.is_empty() {
+                                // If the second key is also pressed
+                                if let Some(&second_keypress) = keystates.get(second_key) {
+                                    if second_keypress != 0 {
+                                        launch = true;
+                                    }
+                                }
+                            }
+
+                            // Three key binds
+                            else if first_key == keypress && !second_key.is_empty() && !third_key.is_empty() {
+                                // If the second key is also pressed
+                                if let Some(&second_keypress) = keystates.get(second_key) {
+                                    if second_keypress != 0 {
+                                        // If the third key is also pressed
+                                        if let Some(&third_keypress) = keystates.get(third_key) {
+                                            if third_keypress != 0 {
+                                                launch = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Launch
+                            if launch {
+                                if launchtype == &"Application" {
+                                    execute::run_application(target, arg1, arg2);
+                                }
+                                else if launchtype == &"Folder" {
+                                    execute::open_folder(target);
+                                }
+                                else if launchtype == &"Script" {
+                                    execute::run_powershell(target);
+                                }
+                                else if launchtype == &"Setting" {
+                                    if let Some(value) = settings.get_mut(target) {
+                                        if arg1 == &"Toggle" && value == &0 {
+                                            println!("Enabled: {}", target);
+                                            *value = 1;
+                                        }
+                                        else if arg1 == &"Toggle" && value == &1 {
+                                            println!("Disabled: {}", target);
+                                            *value = 0;
+                                        }
+                                    }
+                                }
+                                launch = false;
+                                std::thread::sleep(std::time::Duration::from_millis(150));
+                            }
+                        }
+                    }
+                }
             }
-            else {
-                keys_active = true;
-                println!("Keybinds Enabled");
-                std::thread::sleep(std::time::Duration::from_millis(150));
+            // Fallback to re-enable keybinds
+            else if keybind_setting == &0 {
+                for ((bind1, bind2, bind3), (target, arg1, arg2, launchtype)) in keybinds.iter() {
+                    if target == &"Keybinds" {
+                        // Single bind
+                        if bind2.is_empty() && bind3.is_empty() {
+                            if let Some(first_keypress) = keystates.get_mut(bind1) {
+                                if first_keypress != &0 {
+                                    if let Some(value) = settings.get_mut(target) {
+                                        *value = 1;
+                                        println!("Re-enabled keybinds");
+                                    }
+                                }
+                            }
+                        }
+                        // Dual bind
+                        if bind3.is_empty() {
+                            if let Some(first_keypress) = keystates.get_mut(bind1) {
+                                if first_keypress != &0 {
+                                    if let Some(second_keypress) = keystates.get_mut(bind2) {
+                                        if second_keypress != &0 {
+                                            if let Some(value) = settings.get_mut(target) { 
+                                                *value = 1;
+                                                println!("Re-enabled keybinds");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Triple bind
+                        if let Some(first_keypress) = keystates.get(bind1) {
+                            if first_keypress != &0 {
+                                if let Some(second_keypress) = keystates.get(bind2) {
+                                    if second_keypress != &0 {
+                                        if let Some(third_keypress) = keystates.get(bind3) {
+                                            if third_keypress != &0 {
+                                                if let Some(value) = settings.get_mut(target) { 
+                                                    *value = 1;
+                                                    println!("Re-enabled keybinds");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(150));
+                    }
+                }
             }
         }
-
-        // Keybinds
-        if keys_active {
-
-            // Edge - Personal
-            if alt != 0 && q != 0 && !edge_personal_open {
-                execute::run_application(vars::EDGE, edge_profile_personal, &edge_personal_arg2);
-                edge_personal_open = true;
-                println!("Running: Edge-Personal");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-            else if alt != 0 && q != 0 && edge_personal_open {
-                println!("Personal profile is already open.");
-            }
-            else if alt != 0 && e != 0 {
-                let edge_personal_arg2 = "--inprivate";
-                execute::run_application(vars::EDGE, edge_profile_personal, &edge_personal_arg2);
-                edge_personal_open = true;
-                println!("Running: Edge-Personal-Private");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-
-            // Edge - Work
-            if alt != 0 && w != 0 && !edge_work_open {
-                execute::run_application(vars::EDGE, edge_profile_work, &edge_work_arg2);
-                edge_work_open = true;
-                println!("Running: Edge-Work");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-            else if alt != 0 && w != 0 && edge_work_open {
-                println!("Work profile is already open.")
-            }
-
-            // Steam
-            if alt != 0 && s != 0 {
-                execute::run_application(vars::STEAM, "", "");
-                println!("Opened: Steam");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-
-            // Discord
-            if alt != 0 && d != 0 {
-                execute::run_application(vars::DISCORD, "", "");
-                println!("Opened: Discord");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-
-            // Folder
-            if alt != 0 && a != 0 {
-                execute::open_folder(vars::FOLDER_LOCAL);
-                println!("Opened: Local Folder");
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-
-            // Scripts
-            if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 { // Full configuration script
-                println!("Running: Windows Configuration Script");
-                execute::run_powershell(vars::FULL_CONFIGURATION);
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
+        else {
         }
 
         // Lets not overload the CPU
