@@ -1,8 +1,8 @@
+mod execute;
+
 use std::env;
 use std::fs;
-use std::process::Command;
 
-use powershell_script;
 use winapi::um::winuser::GetAsyncKeyState;
 
 // use winit::event_loop::EventLoop;
@@ -24,7 +24,7 @@ fn main() {
     let local_repo = "C:\\Local";
 
     // Script
-    let script_cleanup = include_str!("configure_windows.ps1");
+    let script_cleanup = include_str!("scripts/configure_windows.ps1");
 
     // Arguments
     let edge_profile_personal = "--profile-directory=Default";
@@ -77,7 +77,7 @@ fn main() {
 
             // Edge - Personal
             if alt != 0 && q != 0 && !edge_personal_open {
-                run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                execute::run_application(edge, edge_profile_personal, &edge_personal_arg2);
                 edge_personal_open = true;
                 println!("Running: Edge-Personal");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -87,7 +87,7 @@ fn main() {
             }
             else if alt != 0 && e != 0 {
                 let edge_personal_arg2 = "--inprivate";
-                run_application(edge, edge_profile_personal, &edge_personal_arg2);
+                execute::run_application(edge, edge_profile_personal, &edge_personal_arg2);
                 edge_personal_open = true;
                 println!("Running: Edge-Personal-Private");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -95,7 +95,7 @@ fn main() {
 
             // Edge - Work
             if alt != 0 && w != 0 && !edge_work_open {
-                run_application(edge, edge_profile_work, &edge_work_arg2);
+                execute::run_application(edge, edge_profile_work, &edge_work_arg2);
                 edge_work_open = true;
                 println!("Running: Edge-Work");
                 std::thread::sleep(std::time::Duration::from_millis(150));
@@ -106,21 +106,21 @@ fn main() {
 
             // Steam
             if alt != 0 && s != 0 {
-                run_application(steam, "", "");
+                execute::run_application(steam, "", "");
                 println!("Opened: Steam");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Discord
             if alt != 0 && d != 0 {
-                run_application(discord, "", "");
+                execute::run_application(discord, "", "");
                 println!("Opened: Discord");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
             // Folder
             if alt != 0 && a != 0 {
-                open_folder(local_repo);
+                execute::open_folder(local_repo);
                 println!("Opened: Local Folder");
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
@@ -128,7 +128,7 @@ fn main() {
             // Scripts
             if alt != 0 && c != 0 && n != 0 && m != 0 && enter != 0 {
                 println!("Running: Windows Configuration Script");
-                run_powershell(script_cleanup);
+                execute::run_powershell(script_cleanup);
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
         }
@@ -137,54 +137,6 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
 
-}
-
-// Launch Program
-fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> &'a str<> {
-
-    // Run with extra argument
-    if !arg2.is_empty() {
-        let output = Command::new(app)
-        .arg(arg)
-        .arg(arg2)
-        .spawn();
-
-        println!("Process ID: {}", output.unwrap().id())
-    }
-    // Run the application
-    else if !arg.is_empty() {
-        let output = Command::new(app)
-        .arg(arg)
-        .spawn();
-
-        println!("Process ID: {}", output.unwrap().id())
-    }
-    else {
-        let output = Command::new(app)
-        .spawn();
-
-        println!("Process ID: {}", output.unwrap().id())
-    }
-
-    return app;
-}
-// Scripts
-fn run_powershell(script: &str) {
-    match powershell_script::run(script) {
-        Ok(output) => {
-            println!("{}", output);
-        }
-        Err(e) => {
-            eprintln!("Error: {}", e);
-        }
-    }
-}
-fn open_folder(folder: &str) -> &str {
-    let _output = Command::new("explorer")
-        .arg(folder)
-        .output();
-
-    return folder;
 }
 
 // Edge
