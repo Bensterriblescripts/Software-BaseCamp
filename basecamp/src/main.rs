@@ -136,7 +136,7 @@ fn main() {
             }
             // Fallback to re-enable keybinds
             else if keybind_setting == &0 {
-                for ((bind1, bind2, bind3), (target, arg1, arg2, launchtype)) in keybinds.iter() {
+                for ((bind1, bind2, bind3), (target, _arg1, _arg2, _launchtype)) in keybinds.iter() {
                     if target == &"Keybinds" {
                         // Single bind
                         if bind2.is_empty() && bind3.is_empty() {
