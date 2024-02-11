@@ -2,7 +2,6 @@ mod conf;
 mod execute;
 mod vars;
 
-use std::env;
 use std::collections::HashMap;
 
 use winapi::um::winuser::GetAsyncKeyState;
@@ -10,20 +9,23 @@ use winapi::um::winuser::GetAsyncKeyState;
 fn main() {
 
     // Binds
-    let mut keybinds: HashMap<(&str, &str, &str), (&str, &str, &str, &str)> = HashMap::new();
+    let mut keybinds: HashMap<(&str, &str, &str), (&str, &str, &str, &str, u32)> = HashMap::new();
     let collected_keybinds = vec![
-        (("alt",    "q",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, "", "Application")),
-        (("alt",    "w",    ""),    (vars::EDGE, vars::ARG_EDGE_WORK, "", "Application")),
-        (("alt",    "e",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, vars::ARG_EDGE_PRIVATE, "Application")),
-        (("alt",    "s",    ""),    (vars::STEAM, "", "", "Application")),
-        (("alt",    "d",    ""),    (vars::DISCORD, "", "", "Application")),
-        (("alt",    "a",    ""),    (vars::FOLDER_LOCAL, "", "", "Folder")),
-        (("lctrl",  "alt",  "f"),   ("Keybinds", "Toggle", "", "Setting")),
+        (("alt",    "q",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, "", "Application", 0)),
+        (("alt",    "w",    ""),    (vars::EDGE, vars::ARG_EDGE_WORK, "", "Application", 1)),
+        (("alt",    "e",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, vars::ARG_EDGE_PRIVATE, "Application", 2)),
+        (("alt",    "s",    ""),    (vars::STEAM, "", "", "Application", 3)),
+        (("alt",    "d",    ""),    (vars::DISCORD, "", "", "Application", 4)),
+        (("alt",    "a",    ""),    (vars::FOLDER_LOCAL, "", "", "Folder", 5)),
+        (("lctrl",  "alt",  "f"),   ("Keybinds", "Toggle", "", "Setting", 6)),
     ];
     keybinds.extend(collected_keybinds);
 
     // Core Variables
     let mut launch = false;
+
+    // Processes
+    let mut processes: HashMap<u32, u32> = HashMap::new();
 
     // Settings
     let mut settings: HashMap<&str, i32> = HashMap::new();
@@ -39,7 +41,6 @@ fn main() {
     // Auto-Open Work Browser Links
     let _edge_work_sharepoint = "https://sparknz.sharepoint.com/";
     let _edge_work_outlook = "https://outlook.office.com/mail/";
-    let _edge_work_citrix = env::var("Citrix").unwrap();
 
     // Core Keylogger
     loop {
@@ -72,7 +73,7 @@ fn main() {
                     // If the key has been pressed
                     if *value != 0 {
                         // Locate the key in our keybinds hashmap
-                        for ((first_key, second_key, third_key), (target, arg1, arg2, launchtype)) in &keybinds {
+                        for ((first_key, second_key, third_key), (target, arg1, arg2, launchtype, process)) in &keybinds {
 
                             // Single key binds
                             if first_key == keypress && second_key.is_empty() && third_key.is_empty() {
@@ -107,7 +108,18 @@ fn main() {
                             // Launch
                             if launch {
                                 if launchtype == &"Application" {
-                                    execute::run_application(target, arg1, arg2);
+                                    // Check for the existing application in the local hashmap
+                                    if !processes.contains_key(process) {
+                                        let spawned_process = execute::run_application(target, arg1, arg2);
+                                        // Return 0 is failure, anything else is an ID
+                                        if spawned_process != 0 {
+                                            processes.insert(process.to_owned(), spawned_process);
+                                        }
+                                    }
+                                    // Need to set it as main window here
+                                    else {
+                                        println!("Application is already open.");
+                                    }
                                 }
                                 else if launchtype == &"Folder" {
                                     execute::open_folder(target);
@@ -136,7 +148,7 @@ fn main() {
             }
             // Fallback to re-enable keybinds
             else if keybind_setting == &0 {
-                for ((bind1, bind2, bind3), (target, _arg1, _arg2, _launchtype)) in keybinds.iter() {
+                for ((bind1, bind2, bind3), (target, _arg1, _arg2, _launchtype, _process)) in keybinds.iter() {
                     if target == &"Keybinds" {
                         // Single bind
                         if bind2.is_empty() && bind3.is_empty() {
