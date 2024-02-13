@@ -3,10 +3,15 @@ mod execute;
 mod vars;
 
 use std::collections::HashMap;
+use std::process::Command;
 
 use winapi::um::winuser::GetAsyncKeyState;
 
 fn main() {
+
+    // Core Variables
+    let mut launch = false;
+    let mut keystates: HashMap<&str, i16> = HashMap::new();
 
     // Binds
     let mut keybinds: HashMap<(&str, &str, &str), (&str, &str, &str, &str, u32)> = HashMap::new();
@@ -14,15 +19,13 @@ fn main() {
         (("alt",    "q",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, "", "Application", 0)),
         (("alt",    "w",    ""),    (vars::EDGE, vars::ARG_EDGE_WORK, "", "Application", 1)),
         (("alt",    "e",    ""),    (vars::EDGE, vars::ARG_EDGE_PERSONAL, vars::ARG_EDGE_PRIVATE, "Application", 2)),
-        (("alt",    "s",    ""),    (vars::STEAM, "", "", "Application", 3)),
-        (("alt",    "d",    ""),    (vars::DISCORD, "", "", "Application", 4)),
-        (("alt",    "a",    ""),    (vars::FOLDER_LOCAL, "", "", "Folder", 5)),
-        (("lctrl",  "alt",  "f"),   ("Keybinds", "Toggle", "", "Setting", 6)),
+        (("alt",    "r",    ""),    (vars::VSCODE, "", "", "Application", 3)),
+        (("alt",    "s",    ""),    (vars::STEAM, "", "", "Application", 4)),
+        (("alt",    "d",    ""),    (vars::DISCORD, "", "", "Application", 5)),
+        (("alt",    "a",    ""),    (vars::FOLDER_LOCAL, "", "", "Folder", 6)),
+        (("lctrl",  "alt",  "f"),   ("Keybinds", "Toggle", "", "Setting", 7)),
     ];
     keybinds.extend(collected_keybinds);
-
-    // Core Variables
-    let mut launch = false;
 
     // Processes
     let mut processes: HashMap<u32, u32> = HashMap::new();
@@ -45,8 +48,7 @@ fn main() {
     // Core Keylogger
     loop {
 
-        // Get all key states on loop
-        let mut keystates: HashMap<&str, i16> = HashMap::new();
+        // Get all key states again
         let keystates_collected = vec![
             ("alt",         unsafe { GetAsyncKeyState(0x12) } ),
             ("enter",       unsafe { GetAsyncKeyState(0x0D) }),
@@ -74,7 +76,6 @@ fn main() {
                     if *value != 0 {
                         // Locate the key in our keybinds hashmap
                         for ((first_key, second_key, third_key), (target, arg1, arg2, launchtype, process)) in &keybinds {
-
                             // Single key binds
                             if first_key == keypress && second_key.is_empty() && third_key.is_empty() {
                                 launch = true;
@@ -111,9 +112,9 @@ fn main() {
                                     // Check for the existing application in the local hashmap
                                     if !processes.contains_key(process) {
                                         let spawned_process = execute::run_application(target, arg1, arg2);
-                                        // Return 0 is failure, anything else is an ID
                                         if spawned_process != 0 {
-                                            processes.insert(process.to_owned(), spawned_process);
+                                            let pid = process.to_owned();
+                                            processes.insert(pid, spawned_process);
                                         }
                                     }
                                     // Need to set it as main window here
@@ -204,4 +205,16 @@ fn main() {
         // Lets not overload the CPU
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
+}
+fn check_process_exits(name: String) {
+    let powershell_script = format!("(Get-Process -Name {} -ErrorAction SilentlyContinue).Id", name);
+
+    // Run PowerShell script as a subprocess
+    let output = Command::new("powershell")
+        .arg("-Command")
+        .arg(powershell_script)
+        .output()
+        .expect("Failed to execute PowerShell script");
+
+    println!("Process name: {:?}", output);
 }

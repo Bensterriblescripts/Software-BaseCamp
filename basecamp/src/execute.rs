@@ -1,102 +1,26 @@
-use std::process::{ Command, exit };
+use std::process::Command;
 use powershell_script;
 
 // Applications
 pub fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> u32 {
 
-    // Run with two arguments
+    // Arguments
+    let mut output = Command::new(app);
     if !arg2.is_empty() {
-        let output = Command::new(app)
-        .arg(arg)
-        .arg(arg2)
-        .spawn();
-
-        match output {
-            Ok(mut child) => {
-                println!("Process ID: {}", child.id());
-                let status = child.wait();
-                match status {
-                    Ok(exit_status) => {
-                        if exit_status.success() {
-                            return child.id();
-                        }
-                        else {
-                            exit(exit_status.code().unwrap_or(1));
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Error waiting for child process: {}", e);
-                        return 0;
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Error spawning new process: {}", e);
-                return 0;
-            }
-        }
+        output.arg(arg).arg(arg2);
     }
-    // Run with a single argument
     else if !arg.is_empty() {
-        
-        let output = Command::new(app)
-        .arg(arg)
-        .spawn();
-
-        match output {
-            Ok(mut child) => {
-                println!("Process ID: {}", child.id());
-                let status = child.wait();
-                match status {
-                    Ok(exit_status) => {
-                        if exit_status.success() {
-                            return child.id();
-                        }
-                        else {
-                            exit(exit_status.code().unwrap_or(1));
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Error waiting for child process: {}", e);
-                        return 0;
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Error spawning new process: {}", e);
-                return 0;
-            }
-        }
+        output.arg(arg);
     }
-    // Run with no arguments
-    else {
-        let output = Command::new(app)
-        .spawn();
 
-        match output {
-            Ok(mut child) => {
-                println!("Process ID: {}", child.id());
-                let status = child.wait();
-                match status {
-                    Ok(exit_status) => {
-                        if exit_status.success() {
-                            return child.id();
-                        }
-                        else {
-                            exit(exit_status.code().unwrap_or(1));
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Error waiting for child process: {}", e);
-                        return 0;
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Error spawning new process: {}", e);
-                return 0;
-            }
-        }
+    // New process
+    if let Ok(child) = output.spawn() {
+        println!("Process ID: {}", child.id());
+        return child.id();
+    }
+    else {
+        println!("Failed to spawn the process");
+        return 0;
     }
 }
 
