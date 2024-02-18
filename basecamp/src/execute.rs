@@ -2,7 +2,7 @@ use std::process::Command;
 use powershell_script;
 
 // Applications
-pub fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> u32 {
+pub fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) {
 
     // Arguments
     let mut output = Command::new(app);
@@ -14,13 +14,11 @@ pub fn run_application<'a>(app: &'a str, arg: &str, arg2: &str) -> u32 {
     }
 
     // New process
-    if let Ok(child) = output.spawn() {
-        println!("Process ID: {}", child.id());
-        return child.id();
+    if let Ok(_) = output.output() {
+
     }
     else {
-        println!("Failed to spawn the process");
-        return 0;
+        println!("Error launching exdecutable");
     }
 }
 

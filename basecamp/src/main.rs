@@ -3,7 +3,6 @@ mod execute;
 mod vars;
 
 use std::collections::HashMap;
-use std::process::Command;
 
 use winapi::um::winuser::GetAsyncKeyState;
 
@@ -111,11 +110,7 @@ fn main() {
                                 if launchtype == &"Application" {
                                     // Check for the existing application in the local hashmap
                                     if !processes.contains_key(process) {
-                                        let spawned_process = execute::run_application(target, arg1, arg2);
-                                        if spawned_process != 0 {
-                                            let pid = process.to_owned();
-                                            processes.insert(pid, spawned_process);
-                                        }
+                                        execute::run_application(target, arg1, arg2);
                                     }
                                     // Need to set it as main window here
                                     else {
@@ -205,16 +200,4 @@ fn main() {
         // Lets not overload the CPU
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
-}
-fn check_process_exits(name: String) {
-    let powershell_script = format!("(Get-Process -Name {} -ErrorAction SilentlyContinue).Id", name);
-
-    // Run PowerShell script as a subprocess
-    let output = Command::new("powershell")
-        .arg("-Command")
-        .arg(powershell_script)
-        .output()
-        .expect("Failed to execute PowerShell script");
-
-    println!("Process name: {:?}", output);
 }
